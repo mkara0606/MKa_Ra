@@ -646,28 +646,47 @@ $('ck_x').onclick=()=>leave();
 /* ===== スマホのカメラを使う(QR接続) =====
    PCでQRを表示→スマホが同じページ(#cam=部屋ID)を開くとカメラモードになり、スマホ側で姿勢推定して
    関節座標だけを公開MQTTブローカー経由でPCへ送る(映像は送らない)。PC側では外部姿勢データとして同じ判定に渡す */
-const MQ='wss://broker.emqx.io:8084/mqtt',PH=(location.hash.match(/^#cam=(\w+)/)||[])[1];
+const MQS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt'],
+  HM=location.hash.match(/^#cam=(\w+)(?:&b=(\d))?/),PH=HM&&HM[1],PB=(HM&&+HM[2])||0;
+const rnd=()=>Math.random().toString(36).slice(2,7);
 async function phoneHost(){
   try{
     if(!window.mqtt)await loadScript('https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js');
     if(!window.QRCode)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');
   }catch(e){toast('QRと通信のライブラリを読み込めません（この環境では使えません）');return false}
-  const room=Pose.room=Pose.room||Math.random().toString(36).slice(2,12),url=location.href.split('#')[0]+'#cam='+room;
+  const room=Pose.room=Pose.room||Math.random().toString(36).slice(2,12),url=()=>location.href.split('#')[0]+'#cam='+room+'&b='+(Pose.bi||0);
   ov.hidden=false;ov.className='';
-  ov.innerHTML=`<h1 style='font-size:30px'>スマホで読み取る</h1><div id='qr' style='background:#fff;padding:12px;border-radius:8px'></div><p id='qs'>接続待ち… スマホでQRを読み取って、「カメラを開始」を押してください。</p><p style='font-size:11px;word-break:break-all;opacity:.7'>${esc(url)}</p>${location.protocol==='file:'?"<p>このファイルはスマホから開けません。httpsで公開した場所に置いて、そのURLでPC側も開いてください。</p>":''}<button class='s' id='qx'>キャンセル</button>`;
-  new QRCode($('qr'),{text:url,width:220,height:220});
-  if(!Pose.mq){
-    const c=Pose.mq=mqtt.connect(MQ,{clientId:'sr-pc-'+room});
-    c.on('connect',()=>c.subscribe('steprush/v1/'+room));
-    c.on('error',()=>{if($('qs'))$('qs').textContent='中継サーバーに接続できません（通信が制限されている可能性）'});
+  ov.innerHTML=`<h1 style='font-size:30px'>スマホで読み取る</h1><div id='qr' style='background:#fff;padding:12px;border-radius:8px'></div><p id='qs'>スマホでQRを読み取り、「カメラを開始」を押してください。</p><p id='qd' style='font-size:12px;color:#3de0ff'></p><p id='qu' style='font-size:11px;word-break:break-all;opacity:.6'></p>${location.protocol==='file:'?"<p>このファイルはスマホから開けません。httpsで公開した場所に置いて、そのURLでPC側も開いてください。</p>":''}<button class='s' id='qx'>キャンセル</button>`;
+  const st=t=>{const e=$('qd');if(e)e.textContent=t};
+  const draw=()=>{$('qr').innerHTML='';new QRCode($('qr'),{text:url(),width:220,height:220});$('qu').textContent=url()};
+  draw();
+  const conn=()=>{
+    if(Pose.mq){try{Pose.mq.end(true)}catch(e){}}
+    Pose.up=false;
+    const bi=Pose.bi||0,c=Pose.mq=mqtt.connect(MQS[bi],{clientId:'sr-pc-'+rnd()+rnd(),connectTimeout:7000});
+    let failed=false;
+    st('中継サーバーに接続中…（'+MQS[bi].split('/')[2]+'）');
+    const fail=()=>{
+      if(failed||Pose.up)return;failed=true;try{c.end(true)}catch(e){}
+      if(bi<MQS.length-1){Pose.bi=bi+1;draw();conn()}else st('中継サーバーに接続できません。通信が制限されている可能性があります。');
+    };
+    c.on('connect',()=>{
+      Pose.up=true;st('中継サーバー: 接続済み（'+MQS[bi].split('/')[2]+'）　スマホ: 待機中');
+      c.subscribe('steprush/v1/'+room);
+      clearInterval(Pose.pi);Pose.pi=setInterval(()=>{if(c.connected)c.publish('steprush/v1/'+room+'/pc','1')},1000);
+    });
+    c.on('error',fail);c.on('close',fail);
     c.on('message',(tp,m)=>{
-      try{const j=JSON.parse(m.toString()),lm=[];
-        for(let k=0;k<10;k++)lm[23+k]={x:j.d[k*3],y:j.d[k*3+1],visibility:j.d[k*3+2]};
+      try{
+        const j=JSON.parse(m.toString());
+        if(j.hb){st('スマホから信号を受信しました。足元から腰までが映るようにしてください。');return}
+        const lm=[];for(let k=0;k<10;k++)lm[23+k]={x:j.d[k*3],y:j.d[k*3+1],visibility:j.d[k*3+2]};
         window.StepRush.pose(lm,j.w,j.h,performance.now()-(j.a||0));
         if(Pose.rx){const f=Pose.rx;Pose.rx=null;f()}
       }catch(e){}
     });
-  }
+  };
+  if(!Pose.mq||!Pose.mq.connected)conn();else st('中継サーバー: 接続済み');
   return new Promise(res=>{
     $('qx').onclick=()=>{Pose.rx=null;res(false)};
     Pose.rx=()=>{if($('qs'))$('qs').textContent='接続しました';setTimeout(()=>res(true),600)};
@@ -678,10 +697,10 @@ async function mkLmk(){
   for(const d of['GPU','CPU']){try{return await m.PoseLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task',delegate:d},runningMode:'VIDEO',numPoses:1,minPoseDetectionConfidence:.6,minPosePresenceConfidence:.6,minTrackingConfidence:.6})}catch(e){}}
   throw new Error('姿勢推定モデルを読み込めません');
 }
-// スマホ側の画面: カメラ開始→姿勢推定→関節座標(腹・脳を除く10点)をPCへ送信
+// スマホ側の画面: カメラ開始→姿勢推定→関節座標(腹・腕を除く10点)をPCへ送信。1秒ごとに生存信号も送り、PCとの接続状態を表示する
 function phoneClient(room){
-  document.body.innerHTML=`<div style='position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#14062b;text-align:center;padding:20px'><h1 style='font-size:26px'>ポータブルダンシング　スマホカメラ</h1><video id='pvid' playsinline muted style='max-width:100%;max-height:55vh;border-radius:8px;background:#000'></video><p id='pst'>足元から腰までが映るように、スマホを床の近くに固定してください。横向き推奨。</p><div class='row'><button id='pgo'>カメラを開始</button><button class='s' id='pfc'>背面カメラ</button></div></div>`;
-  let face='environment';const st=t=>$('pst').textContent=t;
+  document.body.innerHTML=`<div style='position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#14062b;text-align:center;padding:20px'><h1 style='font-size:24px'>ポータブルダンシング　スマホカメラ</h1><video id='pvid' playsinline muted style='max-width:100%;max-height:50vh;border-radius:8px;background:#000'></video><p id='pst'>足元から腰までが映るように、スマホを床の近くに固定してください。横向き推奨。</p><p id='pdg' style='font-size:13px;color:#3de0ff;min-height:2.6em'></p><div class='row'><button id='pgo'>カメラを開始</button><button class='s' id='pfc'>背面カメラ</button></div></div>`;
+  let face='environment';const st=t=>$('pst').textContent=t,dg=t=>$('pdg').textContent=t;
   $('pfc').onclick=e=>{face=face==='environment'?'user':'environment';e.target.textContent=face==='user'?'前面カメラ':'背面カメラ'};
   $('pgo').onclick=async()=>{
     $('pgo').disabled=true;
@@ -692,15 +711,23 @@ function phoneClient(room){
       try{navigator.wakeLock&&await navigator.wakeLock.request('screen')}catch(e){}
       st('中継サーバーに接続中…');
       await loadScript('https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js');
-      const c=mqtt.connect(MQ,{clientId:'sr-ph-'+room});
-      await new Promise((ok,ng)=>{c.on('connect',ok);c.on('error',ng)});
-      st('姿勢推定モデルを読み込み中…');
-      const lmk=await mkLmk(),tp='steprush/v1/'+room,ids=[23,24,25,26,27,28,29,30,31,32];
-      let n=0,t0f=performance.now();
+      const tp='steprush/v1/'+room,url=MQS[PB]||MQS[0],c=mqtt.connect(url,{clientId:'sr-ph-'+rnd()+rnd(),connectTimeout:8000});
+      await new Promise((ok,ng)=>{c.once('connect',ok);c.once('error',ng);c.once('close',()=>ng(new Error('中継サーバーに接続できませんでした')))});
+      let pcSeen=0;c.subscribe(tp+'/pc');c.on('message',()=>{pcSeen=performance.now()});
+      setInterval(()=>{if(c.connected)c.publish(tp,JSON.stringify({hb:1}))},1000);
+      st('姿勢推定モデルを読み込み中…（初回は数十秒かかることがあります）');
+      const lmk=await mkLmk(),ids=[23,24,25,26,27,28,29,30,31,32];
+      let n=0,seen=false,err='',t0f=performance.now();
+      st('送信中。PCの画面を確認してください。');
       const f=(now,md)=>{
         try{const r=lmk.detectForVideo(v,performance.now()),L=r.landmarks&&r.landmarks[0];
-          if(L){c.publish(tp,JSON.stringify({w:v.videoWidth,h:v.videoHeight,a:md&&md.captureTime?Math.round(performance.now()-md.captureTime):0,d:ids.flatMap(i=>[+L[i].x.toFixed(4),+L[i].y.toFixed(4),+(L[i].visibility??1).toFixed(2)])}));n++}}catch(e){}
-        if(performance.now()-t0f>1000){st(`送信中 ${n}fps　このままPCの画面を進めてください`);n=0;t0f=performance.now()}
+          seen=!!L;
+          if(L){c.publish(tp,JSON.stringify({w:v.videoWidth,h:v.videoHeight,a:md&&md.captureTime?Math.round(performance.now()-md.captureTime):0,d:ids.flatMap(i=>[+L[i].x.toFixed(4),+L[i].y.toFixed(4),+(L[i].visibility??1).toFixed(2)])}));n++}
+        }catch(e){err=e&&e.message||String(e)}
+        if(performance.now()-t0f>1000){
+          dg(`送信 ${n}fps　PC: ${pcSeen&&performance.now()-pcSeen<3500?'確認済み':'未確認（PCがQR画面か確認）'}　${seen?'人物を検出中':'人物が映っていません'}${err?'　エラー: '+err:''}`);
+          n=0;t0f=performance.now();
+        }
         v.requestVideoFrameCallback?v.requestVideoFrameCallback(f):setTimeout(f,33);
       };
       f(0,null);
