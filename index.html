@@ -142,12 +142,40 @@ button.s{font-size:15px;padding:9px 16px;background:var(--cyan);box-shadow:0 4px
 .gear{margin-left:auto;background:none;box-shadow:none;border:1px solid rgba(246,239,255,.3);border-radius:20px;color:var(--ink);font:600 10px 'Syncopate',sans-serif;letter-spacing:.2em;padding:7px 14px}
 .gear:hover{border-color:var(--cyan);color:var(--cyan)}
 .gear:active{transform:none;box-shadow:none}
+
+/* ===== v3: mobile / collapsible panels ===== */
+.ehr{display:flex;align-items:center;gap:8px}
+.ehr .bt{margin-left:auto;flex:none;padding:6px 12px}
+#ed .etb{display:none}
+#ed.col{top:auto;left:0;right:0;bottom:0;width:auto;height:auto;border-left:0;border-top:1px solid rgba(61,224,255,.35);padding-bottom:env(safe-area-inset-bottom,0px)}
+#ed.col>.eh,#ed.col>.etabs,#ed.col>.pane,#ed.col>.efoot{display:none}
+#ed.col .etb{display:flex;gap:8px;align-items:center;padding:8px 10px;overflow-x:auto;white-space:nowrap}
+.etb .seg{flex:none}
+#ed .etb .seg button{padding:9px 11px;font-size:12px;flex:none}
+#ed .etb .bt{flex:none;padding:9px 12px}
+#ed .etb .pri{flex:none;padding:9px 16px;font-size:12px}
+#t_info{font-size:11px;color:#ff9ad0;flex:none}
+@media(max-width:720px){#ed{width:min(296px,86vw)}}
+.ckh{display:flex;align-items:center;gap:8px}
+.ckh b{font:700 12px 'Syncopate',sans-serif;letter-spacing:.3em;color:var(--cyan)}
+.ckh span{font-size:11px;color:#ffd23d;margin-right:auto}
+.ckh button{background:none;box-shadow:none;border:1px solid rgba(246,239,255,.3);border-radius:14px;color:var(--ink);font:600 11px 'Hiragino Sans','Yu Gothic',sans-serif;padding:5px 11px}
+.ckh button:active{transform:none;box-shadow:none}
+#ck{max-height:calc(100% - 16px);overflow-y:auto}
+#ck.col{width:auto}
+#ck.col #ckb{display:none}
+@media(max-width:720px){#ck{width:min(300px,calc(100vw - 16px))}#ck.col{width:auto}}
+#am{position:absolute;inset:0;background:rgba(5,2,14,.74);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:7}
+#am[hidden]{display:none}
+#am_n{font:700 56px 'Syncopate',sans-serif;color:#3de0ff;text-align:center}
+#am_n:empty{display:none}
+#am .r2{justify-content:flex-end}
 </style></head>
 <body>
 <canvas id="c"></canvas>
 <div id="ov"></div>
 <div id="ed" hidden>
-<div class="eh"><b>EDITOR</b><span id="e_info"></span></div>
+<div class="eh"><div class="ehr"><b>EDITOR</b><button class="bt" id="e_col">しまう</button></div><span id="e_info"></span></div>
 <div class="etabs"><button data-tab="a" class="on">編集</button><button data-tab="b">曲情報</button><button data-tab="c">ファイル</button></div>
 <div class="pane on" data-pane="a">
 <div class="lab">モード</div>
@@ -179,17 +207,25 @@ button.s{font-size:15px;padding:9px 16px;background:var(--cyan);box-shadow:0 4px
 </div>
 <div class="efoot"><button class="pri" id="e_sv">保存して曲選択に追加</button>
 <div class="r2"><button class="bt" id="e_z">0拍目</button><button class="bt" id="e_pl">再生/停止</button><button class="bt" id="e_e">最後へ</button><button class="bt" id="e_ts">テスト</button></div></div>
+<div class="etb">
+<button class="bt" id="t_op">パネル</button>
+<div class="seg" id="t_mode"><button data-m="put" class="on">配置</button><button data-m="sel">選択</button><button data-m="del">削除</button></div>
+<div class="seg" id="t_kseg"><button data-k="t" class="on">タップ</button><button data-k="l">ロング</button><button data-k="j">ジャンプ</button><button data-k="d">ダウン</button></div>
+<button class="bt" id="t_hb">L</button>
+<button class="bt" id="t_z">0拍目</button><button class="bt" id="t_pl">再生</button>
+<button class="pri" id="t_sv">保存</button><span id="t_info"></span>
+</div>
 </div>
 <input type="file" id="fi" hidden>
 <div id="msg"></div>
-<div id="ck" hidden><canvas id="pv" width="320" height="180"></canvas><div id="cs"></div>
+<div id="ck" hidden><div class="ckh"><b>CHECK</b><span id="ck_m"></span><button id="ck_tg">しまう</button><button id="ck_x">終了</button></div><div id="ckb"><canvas id="pv" width="320" height="180"></canvas><div id="cs"></div>
 <label>遅延補正 <b id="lv">0</b> ms<input type="range" id="lat" min="-300" max="500" step="5"></label>
 <label>ジャンプ判定の遅れ <b id="jv"></b> ms<input type="range" id="jd" min="0" max="500" step="5"></label>
 <label>足を上げたとする高さ <b id="tv"></b><input type="range" id="lft" min="0.02" max="0.3" step="0.01"></label>
 <label>左右のトリミング(端から) <b id="sv"></b><input type="range" id="spn" min="0" max="0.3" step="0.01"></label>
 <div class="r2"><button class="s" id="ck_cal">再キャリブレーション</button><button class="s" id="ck_auto">ずれから自動補正</button></div>
-<div class="r2"><button class="s" id="ck_aj">ジャンプ遅れを自動設定</button></div>
-<div class="r2"><button class="s" id="ck_x">チェックを終了</button></div></div>
+<div class="r2"><button class="s" id="ck_aj">ジャンプ遅れを自動設定</button></div></div></div>
+<div id="am" hidden><div class="card2"><h3 id="am_t">自動補正</h3><p id="am_p" style="white-space:pre-line;font-size:13px;line-height:1.8;margin:0"></p><div id="am_n"></div><div class="r2" id="am_b"><button class="go2" id="am_no">キャンセル</button><button class="go2" id="am_ok" style="border-color:#3de0ff;color:#3de0ff">OK</button></div></div></div>
 <script>
 const cv=document.getElementById('c'),g=cv.getContext('2d'),ov=document.getElementById('ov');
 const HIT_R=.13;const hue=x=>`hsl(${340-x*290},100%,62%)`;
@@ -252,7 +288,7 @@ function start(){
   t0=ctx.currentTime+LEAD;
   if(song.buf){const s=ctx.createBufferSource();s.buffer=song.buf;s.connect(outM);s.start(t0)}else if(song.builtin)music();
   ov.hidden=true;E.hidden=true;running=true;mode='game';
-  Pose.use=Pose.inp!=='mouse'&&!!Pose.cal&&!(Opt.auto&&!song.check);LOOPT=song.loop?song.loopLen*BEAT:0;chk.length=0;Pose.lb=-9;$('ck').hidden=!song.check;if(song.check)syncCk();
+  Pose.use=Pose.inp!=='mouse'&&!!Pose.cal&&!(Opt.auto&&!song.check);LOOPT=song.loop?song.loopLen*BEAT:0;chk.length=0;Pose.lb=-9;$('ck').hidden=!song.check;if(song.check){syncCk();if(ckColl===null)ckColl=matchMedia('(max-width:720px)').matches;$('ck').classList.toggle('col',ckColl);$('ck_tg').textContent=ckColl?'開く':'しまう'}
 }
 
 function judge(txt,c,k){
@@ -280,7 +316,7 @@ function hit(x,act,id,lat){
   if(n){
     const d=n.t-t;
     if(n.k==='l')n.held=id==null?'p':id;else n.done=true;
-    const ad=Math.abs(d);if(song.check)chk.push(d);
+    const ad=Math.abs(d);if(song.check&&(n.k==='t'||n.k==='l'))chk.push(d);
     if(ad<.05)judge('PERFECT','#ffd23d','P');else if(ad<.1)judge('GREAT','#3de0ff','Gr');else judge('GOOD','#ff9ad0','Go');
     if(Opt.tap)osc('triangle',1320,ctx.currentTime,.08,.15,0,true);
     return;
@@ -290,8 +326,8 @@ function hit(x,act,id,lat){
 const geo=()=>({LW:W*.32,cx:W/2});
 const press=(x,act,id)=>hit(Math.min(1,Math.max(0,x)),act,id);
 const release=id=>rel(id);
-window.StepRush={press,release,pose:(lm,w,h,cap)=>{Pose.ext=true;poseFeed(lm,w,h,cap)}};
-addEventListener('message',e=>{const d=e.data;if(!d)return;if(d.type==='step'&&typeof d.x==='number')press(d.x,d.act,d.id);if(d.type==='release')release(d.id);if(d.type==='pose'&&Array.isArray(d.lm))window.StepRush.pose(d.lm,d.w,d.h)});
+window.StepRush={press,release};
+addEventListener('message',e=>{const d=e.data;if(!d)return;if(d.type==='step'&&typeof d.x==='number')press(d.x,d.act,d.id);if(d.type==='release')release(d.id)});
 cv.addEventListener('pointerdown',e=>{e.preventDefault();if(mode==='edit')return edPointer(e);if(Pose.use)return;const{LW,cx}=geo();press((e.clientX-(cx-1.5*LW))/(3*LW),e.shiftKey?'jump':(e.ctrlKey||e.altKey)?'down':undefined,e.pointerId)});
 
 // リザルト: 最後のノーツから3秒待って、音をフェードアウトしながら画面をフェードで切り替える
@@ -419,7 +455,7 @@ function pickStep(d){const v=visSongs(),k=v.findIndex(x=>x[1]===sel),n=Math.max(
 function menu(){
   mode='game';testing=false;E.hidden=true;ov.hidden=false;ov.className='sel';song=songs[sel];
   const s=song,ls0=ov.querySelector('.list2'),st0=ls0?ls0.scrollTop:0,ok=s.builtin||s.buf,vis=visSongs(),fa=document.activeElement&&document.activeElement.id==='sq',cp=fa?document.activeElement.selectionStart:0;
-  ov.innerHTML=`<div class='sx'><aside class='sl2'><div class='sh'><b>SELECT</b><span>${vis.length} / ${songs.length}</span><button class='gear' id='bs'>SETTINGS</button></div><div class='sq'><input id='sq' type='search' placeholder='曲名・アーティストで検索' autocomplete='off' value='${esc(sq)}'></div><div class='list2'>${vis.length?vis.map(([a,i])=>`<button class='sc${i===sel?' on':''}' data-i='${i}'>${a.jacket?`<img src='${a.jacket}' alt=''>`:'<i></i>'}<b>${esc(a.title)}</b><span>${esc(a.artist||'—')}　BPM ${a.bpm}</span></button>`).join(''):"<p class='nm'>該当する曲がありません</p>"}</div></aside><section class='dt'><div class='hero'>${s.jacket?`<img src='${s.jacket}' alt=''>`:`<div class='ph2'></div>`}<div class='meta'><h2>${esc(s.title)}</h2><p>${esc(s.artist||'—')}</p><div class='chips'><em>BPM ${s.bpm}</em><em>NOTES ${s.builtin?'—':s.notes.length}</em><em class='${ok?'ok':'warn'}' title='${esc(s.audioName||'')}'>${ok?'AUDIO':'音源なし'}</em></div></div></div><div class='opts'><label>OFFSET<b id='ofv'>${s.uoff} ms</b><input type='range' id='uof' min='-300' max='300' step='5' value='${s.uoff}'></label><label>INPUT<span></span><select id='inp'><option value='mouse'>マウス／タッチ</option><option value='cam'>カメラ（足の動き）</option><option value='ext'>外部の姿勢データ</option><option value='phone'>スマホのカメラ（QRで接続）</option></select></label></div><button class='go' id='b1'>START</button><div class='links'><button id='b0'>← 戻る</button><button id='b2'>譜面を読み込む</button>${s.builtin?'':`<button id='b3'>音源を読み込む</button><button id='b6'>書き出し</button><button id='b5'>削除</button>`}<button id='b4'>エディタ</button><button id='b7'>チェックモード</button></div></section></div>`;
+  ov.innerHTML=`<div class='sx'><aside class='sl2'><div class='sh'><b>SELECT</b><span>${vis.length} / ${songs.length}</span><button class='gear' id='bs'>SETTINGS</button></div><div class='sq'><input id='sq' type='search' placeholder='曲名・アーティストで検索' autocomplete='off' value='${esc(sq)}'></div><div class='list2'>${vis.length?vis.map(([a,i])=>`<button class='sc${i===sel?' on':''}' data-i='${i}'>${a.jacket?`<img src='${a.jacket}' alt=''>`:'<i></i>'}<b>${esc(a.title)}</b><span>${esc(a.artist||'—')}　BPM ${a.bpm}</span></button>`).join(''):"<p class='nm'>該当する曲がありません</p>"}</div></aside><section class='dt'><div class='hero'>${s.jacket?`<img src='${s.jacket}' alt=''>`:`<div class='ph2'></div>`}<div class='meta'><h2>${esc(s.title)}</h2><p>${esc(s.artist||'—')}</p><div class='chips'><em>BPM ${s.bpm}</em><em>NOTES ${s.builtin?'—':s.notes.length}</em><em class='${ok?'ok':'warn'}' title='${esc(s.audioName||'')}'>${ok?'AUDIO':'音源なし'}</em></div></div></div><div class='opts'><label>OFFSET<b id='ofv'>${s.uoff} ms</b><input type='range' id='uof' min='-300' max='300' step='5' value='${s.uoff}'></label><label>INPUT<span></span><select id='inp'><option value='mouse'>マウス／タッチ</option><option value='cam'>カメラ（足の動き）</option></select></label></div><button class='go' id='b1'>START</button><div class='links'><button id='b0'>← 戻る</button><button id='b2'>譜面を読み込む</button>${s.builtin?'':`<button id='b3'>音源を読み込む</button><button id='b6'>書き出し</button><button id='b5'>削除</button>`}<button id='b4'>エディタ</button><button id='b7'>チェックモード</button></div></section></div>`;
   ov.querySelector('.list2').scrollTop=st0;
   {const on=ov.querySelector('.sc.on');if(on)on.scrollIntoView({block:'nearest'})}
   $('bs').onclick=openSettings;
@@ -454,6 +490,7 @@ const Pose={inp:'mouse',use:false,ext:false,lat:0,jd:.15,jl:[],trim:0,lift:.05,c
   feet:{L:{g:true,x:.5,h:0,t:0},R:{g:true,x:.5,h:0,t:0}}};
 try{Object.assign(Pose,JSON.parse(localStorage.getItem('sr_cfg')||'{}'))}catch(e){}
 if(!Pose.v2){Pose.lift=.05;Pose.v2=1}
+if(Pose.inp!=='mouse'&&Pose.inp!=='cam')Pose.inp='mouse';
 const saveCfg=()=>{try{localStorage.setItem('sr_cfg',JSON.stringify({inp:Pose.inp,lat:Pose.lat,trim:Pose.trim,lift:Pose.lift,jd:Pose.jd,v2:1}))}catch(e){}};
 const med=a=>a.slice().sort((p,q)=>p-q)[a.length>>1];
 // One Euro Filter: 動きが速いときは遅れを減らし、静止時はブレを抑える
@@ -564,7 +601,7 @@ async function camStart(){
     for(const d of['GPU','CPU']){try{Pose.lmk=await m.PoseLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task',delegate:d},runningMode:'VIDEO',numPoses:1,minPoseDetectionConfidence:.6,minPosePresenceConfidence:.6,minTrackingConfidence:.6});break}catch(e){}}
     if(!Pose.lmk)throw 0;
   }catch(e){
-    toast('姿勢推定モデルを読み込めません。HTMLを保存してローカルで開くか、StepRush.pose() に関節座標を送ってください');
+    toast('姿勢推定モデルを読み込めません。通信が制限されている可能性があります');
     Pose.vid.srcObject.getTracks().forEach(t=>t.stop());Pose.vid=null;return false;
   }
   if(!Pose.loopOn){Pose.loopOn=true;poseLoop()}
@@ -632,6 +669,7 @@ function drawCk(){
   if(lm)for(const i of[23,24,25,26,27,28,29,30,31,32]){if(!lm[i])continue;c.globalAlpha=Math.min(1,(lm[i].visibility??1)+.2);c.fillStyle=i%2?'#2f7bff':'#ff6a1a';c.beginPath();c.arc((1-lm[i].x)*w,lm[i].y*h,3.5,0,7);c.fill();c.globalAlpha=1}
   const F=Pose.feet;for(const k of['L','R']){c.fillStyle=k==='L'?'#2f7bff':'#ff6a1a';c.globalAlpha=F[k].g?1:.35;c.fillRect(F[k].x*w-6,h-12,12,12);c.globalAlpha=1}
   const e=chk.slice(-12),avg=e.length?e.reduce((s,d)=>s+d,0)/e.length*1000:0;
+  $('ck_m').textContent=Auto.run?'自動補正 '+Math.min(Auto.loops+1,3)+'/3':(e.length?(avg>=0?'+':'')+avg.toFixed(0)+'ms':'');
   $('cs').textContent=`左足:${F.L.g?'接地':'離'}　右足:${F.R.g?'接地':'離'}　ジャンプ:${Pose.air?'○':'−'}${Pose.jl.length?'(遅れ'+Math.round(Pose.jl[Pose.jl.length-1]*1000)+'ms)':''}　ダウン:${Pose.down?'○':'−'}　／　直近${e.length}回の平均ずれ ${avg>=0?'+':''}${avg.toFixed(0)}ms（+は早い）`;
 }
 $('lat').oninput=e=>{Pose.lat=e.target.value/1000;$('lv').textContent=e.target.value};
@@ -641,115 +679,51 @@ $('jd').oninput=e=>{Pose.jd=e.target.value/1000;$('jv').textContent=e.target.val
 $('lat').onchange=$('lft').onchange=$('spn').onchange=$('jd').onchange=saveCfg;
 $('ck_aj').onclick=()=>{const a=Pose.jl.slice(-4);if(a.length<2)return toast('ジャンプの記録が足りません（2回以上）');Pose.jd=clamp(a.reduce((s,d)=>s+d,0)/a.length,0,.5);syncCk();saveCfg();Pose.jl.length=0;toast('ジャンプ判定の遅れを更新しました')};
 $('ck_cal').onclick=()=>camCal();
-$('ck_auto').onclick=()=>{const e=chk.slice(-12);if(e.length<4)return toast('判定が足りません（4回以上）');Pose.lat=clamp(Pose.lat-e.reduce((s,d)=>s+d,0)/e.length,-.3,.5);syncCk();saveCfg();chk.length=0;toast('遅延補正を更新しました')};
+$('ck_auto').onclick=autoFix;
+$('ck_tg').onclick=()=>{ckColl=!ckColl;$('ck').classList.toggle('col',ckColl);$('ck_tg').textContent=ckColl?'開く':'しまう'};
 $('ck_x').onclick=()=>leave();
-/* ===== スマホのカメラを使う(QR接続) =====
-   PCでQRを表示→スマホが同じページ(#cam=部屋ID)を開くとカメラモードになり、スマホ側で姿勢推定して
-   関節座標だけを公開MQTTブローカー経由でPCへ送る(映像は送らない)。PC側では外部姿勢データとして同じ判定に渡す */
-const MQS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt'],
-  HM=location.hash.match(/^#cam=(\w+)(?:&b=(\d))?/),PH=HM&&HM[1],PB=(HM&&+HM[2])||0;
-const rnd=()=>Math.random().toString(36).slice(2,7);
-async function phoneHost(){
-  try{
-    if(!window.mqtt)await loadScript('https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js');
-    if(!window.QRCode)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js');
-  }catch(e){toast('QRと通信のライブラリを読み込めません（この環境では使えません）');return false}
-  const room=Pose.room=Pose.room||Math.random().toString(36).slice(2,12),url=()=>location.href.split('#')[0]+'#cam='+room+'&b='+(Pose.bi||0);
-  ov.hidden=false;ov.className='';
-  ov.innerHTML=`<h1 style='font-size:30px'>スマホで読み取る</h1><div id='qr' style='background:#fff;padding:12px;border-radius:8px'></div><p id='qs'>スマホでQRを読み取り、「カメラを開始」を押してください。</p><p id='qd' style='font-size:12px;color:#3de0ff'></p><p id='qu' style='font-size:11px;word-break:break-all;opacity:.6'></p>${location.protocol==='file:'?"<p>このファイルはスマホから開けません。httpsで公開した場所に置いて、そのURLでPC側も開いてください。</p>":''}<button class='s' id='qx'>キャンセル</button>`;
-  const st=t=>{const e=$('qd');if(e)e.textContent=t};
-  const draw=()=>{$('qr').innerHTML='';new QRCode($('qr'),{text:url(),width:220,height:220});$('qu').textContent=url()};
-  draw();
-  const conn=()=>{
-    if(Pose.mq){try{Pose.mq.end(true)}catch(e){}}
-    Pose.up=false;
-    const bi=Pose.bi||0,c=Pose.mq=mqtt.connect(MQS[bi],{clientId:'sr-pc-'+rnd()+rnd(),connectTimeout:7000});
-    let failed=false;
-    st('中継サーバーに接続中…（'+MQS[bi].split('/')[2]+'）');
-    const fail=()=>{
-      if(failed||Pose.up)return;failed=true;try{c.end(true)}catch(e){}
-      if(bi<MQS.length-1){Pose.bi=bi+1;draw();conn()}else st('中継サーバーに接続できません。通信が制限されている可能性があります。');
-    };
-    c.on('connect',()=>{
-      Pose.up=true;st('中継サーバー: 接続済み（'+MQS[bi].split('/')[2]+'）　スマホ: 待機中');
-      c.subscribe('steprush/v1/'+room);
-      clearInterval(Pose.pi);Pose.pi=setInterval(()=>{if(c.connected)c.publish('steprush/v1/'+room+'/pc','1')},1000);
-    });
-    c.on('error',fail);c.on('close',fail);
-    c.on('message',(tp,m)=>{
-      try{
-        const j=JSON.parse(m.toString());
-        if(j.hb){st('スマホから信号を受信しました。足元から腰までが映るようにしてください。');return}
-        const lm=[];for(let k=0;k<10;k++)lm[23+k]={x:j.d[k*3],y:j.d[k*3+1],visibility:j.d[k*3+2]};
-        window.StepRush.pose(lm,j.w,j.h,performance.now()-(j.a||0));
-        if(Pose.rx){const f=Pose.rx;Pose.rx=null;f()}
-      }catch(e){}
-    });
-  };
-  if(!Pose.mq||!Pose.mq.connected)conn();else st('中継サーバー: 接続済み');
-  return new Promise(res=>{
-    $('qx').onclick=()=>{Pose.rx=null;res(false)};
-    Pose.rx=()=>{if($('qs'))$('qs').textContent='接続しました';setTimeout(()=>res(true),600)};
-  });
-}
-async function mkLmk(){
-  const V='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14',m=await import(V+'/vision_bundle.mjs'),fs=await m.FilesetResolver.forVisionTasks(V+'/wasm');
-  for(const d of['GPU','CPU']){try{return await m.PoseLandmarker.createFromOptions(fs,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task',delegate:d},runningMode:'VIDEO',numPoses:1,minPoseDetectionConfidence:.6,minPosePresenceConfidence:.6,minTrackingConfidence:.6})}catch(e){}}
-  throw new Error('姿勢推定モデルを読み込めません');
-}
-// スマホ側の画面: カメラ開始→姿勢推定→関節座標(腹・腕を除く10点)をPCへ送信。1秒ごとに生存信号も送り、PCとの接続状態を表示する
-function phoneClient(room){
-  document.body.innerHTML=`<div style='position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#14062b;text-align:center;padding:20px'><h1 style='font-size:24px'>ポータブルダンシング　スマホカメラ</h1><video id='pvid' playsinline muted style='max-width:100%;max-height:50vh;border-radius:8px;background:#000'></video><p id='pst'>足元から腰までが映るように、スマホを床の近くに固定してください。横向き推奨。</p><p id='pdg' style='font-size:13px;color:#3de0ff;min-height:2.6em'></p><div class='row'><button id='pgo'>カメラを開始</button><button class='s' id='pfc'>背面カメラ</button></div></div>`;
-  let face='environment';const st=t=>$('pst').textContent=t,dg=t=>$('pdg').textContent=t;
-  $('pfc').onclick=e=>{face=face==='environment'?'user':'environment';e.target.textContent=face==='user'?'前面カメラ':'背面カメラ'};
-  $('pgo').onclick=async()=>{
-    $('pgo').disabled=true;
-    try{
-      st('カメラを起動中…');
-      const v=$('pvid');v.srcObject=await navigator.mediaDevices.getUserMedia({video:{facingMode:face,width:{ideal:1280},height:{ideal:720},frameRate:{ideal:60}}});
-      v.style.transform=face==='user'?'scaleX(-1)':'none';await v.play();
-      try{navigator.wakeLock&&await navigator.wakeLock.request('screen')}catch(e){}
-      st('中継サーバーに接続中…');
-      await loadScript('https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js');
-      const tp='steprush/v1/'+room,url=MQS[PB]||MQS[0],c=mqtt.connect(url,{clientId:'sr-ph-'+rnd()+rnd(),connectTimeout:8000});
-      await new Promise((ok,ng)=>{c.once('connect',ok);c.once('error',ng);c.once('close',()=>ng(new Error('中継サーバーに接続できませんでした')))});
-      let pcSeen=0;c.subscribe(tp+'/pc');c.on('message',()=>{pcSeen=performance.now()});
-      setInterval(()=>{if(c.connected)c.publish(tp,JSON.stringify({hb:1}))},1000);
-      st('姿勢推定モデルを読み込み中…（初回は数十秒かかることがあります）');
-      const lmk=await mkLmk(),ids=[23,24,25,26,27,28,29,30,31,32];
-      let n=0,seen=false,err='',t0f=performance.now();
-      st('送信中。PCの画面を確認してください。');
-      const f=(now,md)=>{
-        try{const r=lmk.detectForVideo(v,performance.now()),L=r.landmarks&&r.landmarks[0];
-          seen=!!L;
-          if(L){c.publish(tp,JSON.stringify({w:v.videoWidth,h:v.videoHeight,a:md&&md.captureTime?Math.round(performance.now()-md.captureTime):0,d:ids.flatMap(i=>[+L[i].x.toFixed(4),+L[i].y.toFixed(4),+(L[i].visibility??1).toFixed(2)])}));n++}
-        }catch(e){err=e&&e.message||String(e)}
-        if(performance.now()-t0f>1000){
-          dg(`送信 ${n}fps　PC: ${pcSeen&&performance.now()-pcSeen<3500?'確認済み':'未確認（PCがQR画面か確認）'}　${seen?'人物を検出中':'人物が映っていません'}${err?'　エラー: '+err:''}`);
-          n=0;t0f=performance.now();
-        }
-        v.requestVideoFrameCallback?v.requestVideoFrameCallback(f):setTimeout(f,33);
-      };
-      f(0,null);
-    }catch(e){st('失敗しました: '+(e&&e.message||e));$('pgo').disabled=false}
-  };
-}
 // メインメニュー: 曲選択かエディタを選ぶ
 function mainMenu(){
   mode='game';testing=false;running=false;E.hidden=true;$('ck').hidden=true;ov.hidden=false;ov.className='ttl';
   ov.innerHTML=`<div class='lg'>PORTABLE<br>DANCING<small>ポータブルダンシング</small></div><div class='mm'><button class='mb' id='m1'>曲選択<span>PLAY</span></button><button class='mb' id='m2'>エディタ<span>EDIT</span></button></div>`;
   $('m1').onclick=menu;$('m2').onclick=()=>edOpen(true);
 }
+// ===== 自動補正: 説明→OK→5秒後にキャリブレーション→成功でチェックノーツを3ループ→結果を反映 =====
+const Auto={run:false,loops:0},sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let ckColl=null;
+function amDialog(txt){return new Promise(res=>{$('am').hidden=false;$('am_t').textContent='自動補正';$('am_p').textContent=txt;$('am_n').textContent='';$('am_b').hidden=false;$('am_ok').onclick=()=>res(true);$('am_no').onclick=()=>{$('am').hidden=true;res(false)}})}
+function amShow(n,txt){$('am').hidden=false;$('am_b').hidden=true;$('am_n').textContent=n;$('am_p').textContent=txt}
+async function autoFix(){
+  if(!Pose.use)return toast('自動補正はカメラ入力のときだけ使えます');
+  if(!await amDialog('自動補正を行います。\nOKを押すと5秒後にキャリブレーションを行います。カメラの正面に立ち、両足を床につけて静止してください。\n成功すると、チェックモードのノーツが3ループ流れます。流れてくるノーツに合わせて踏んでください。\nその結果から、遅延補正とジャンプ判定の遅れを自動で更新します。'))return;
+  for(let n=5;n>0;n--){if(!running)return $('am').hidden=true;amShow(n,'キャリブレーションまで…\n正面に立ち、両足を床につけて静止してください。');await sleep(1000)}
+  amShow('…','キャリブレーション中（静止してください）');
+  Pose.cs=[];await sleep(1000);
+  const ok=poseCalEnd();$('am').hidden=true;
+  if(!ok)return toast('キャリブレーションに失敗しました（足が検出できません）');
+  chk.length=0;Pose.jl.length=0;Auto.loops=0;Auto.run=true;Pose.lb=-9;
+  t0=ctx.currentTime+.8;for(const n of notes){n.done=false;n.held=null;n.dev=0}
+  toast('ノーツに合わせて踏んでください（3ループ）');
+}
+function finishAuto(){
+  Auto.run=false;
+  const e=chk.slice(),jl=Pose.jl.slice();
+  if(e.length<6)return toast('判定が少なすぎたため、補正を反映しませんでした');
+  const a=e.reduce((s,d)=>s+d,0)/e.length,old=Pose.lat,nl=clamp(old-a,-.3,.5);
+  Pose.lat=nl;
+  if(jl.length>=2)Pose.jd=clamp(jl.reduce((s,d)=>s+d,0)/jl.length+(old-nl),0,.5);
+  syncCk();saveCfg();chk.length=0;Pose.jl.length=0;
+  toast('自動補正を反映しました: 遅延補正 '+Math.round(nl*1000)+'ms'+(jl.length>=2?'、ジャンプ '+Math.round(Pose.jd*1000)+'ms':'')+'（'+e.length+'回の判定）');
+}
 async function launch(check){
   if(Pose.inp!=='mouse'&&!Opt.auto){
     if(Pose.inp==='cam'&&!await camStart())return menu();
-    if(Pose.inp==='phone'&&!await phoneHost())return menu();
     if(!await camCal())return menu();
   }
   song=check?chkSong():songs[sel];
   start();
 }
-function leave(){running=false;$('ck').hidden=true;if(out){out.disconnect();out=null}testing?edResume():menu()}
+function leave(){running=false;Auto.run=false;$('am').hidden=true;$('ck').hidden=true;if(out){out.disconnect();out=null}testing?edResume():menu()}
 /* ===== エディタ ===== */
 let eb=0,epl=false,es=0,eb0=0,eLast=0,esrc=null,sn=2,xd=8,emx=0,emy=0,ek='t',eh='A',ew=4,edDrag=null,edPt=null,edScr=false,ectrl=false,eht=false,edMode='put',edBox=null,edErase=false,edMove=null,edClip=[];
 // エディタは「下書き(draft)」を編集する。保存しないと曲選択の譜面には反映されない
@@ -761,7 +735,7 @@ function edOpen(blank){
   d.src=blank===true||s.builtin?null:s;d.snap=snap(d);
   song=d;eb=0;edSel.clear();edResume();
 }
-function edResume(){mode='edit';running=false;ov.hidden=true;E.hidden=false;edSync()}
+function edResume(){mode='edit';running=false;ov.hidden=true;E.hidden=false;if(edColl===null)edColl=matchMedia('(max-width:720px)').matches;E.classList.toggle('col',edColl);edSync()}
 function edSave(){
   const{src,...c}=song,data={...c,notes:cl(song.notes)};delete data.snap;
   let t=src;
@@ -770,7 +744,7 @@ function edSave(){
 }
 function edSync(){
   $('e_ti').value=song.title;$('e_ar').value=song.artist;$('e_bpm').value=song.bpm;$('e_off').value=song.offset;
-  $('e_info').textContent=`ノーツ ${song.notes.length}　音源: ${song.audioName||'なし'}　ジャケット: ${song.jacket?'あり':'なし'}　${song.snap===snap(song)?'保存済み':'● 未保存'}`;
+  $('t_info').textContent=song.snap===snap(song)?'':'● 未保存';$('e_info').textContent=`ノーツ ${song.notes.length}　音源: ${song.audioName||'なし'}　ジャケット: ${song.jacket?'あり':'なし'}　${song.snap===snap(song)?'保存済み':'● 未保存'}`;
 }
 function edStop(){if(!epl)return;epl=false;if(esrc){try{esrc.stop()}catch(e){}esrc=null}}
 function edPlay(){
@@ -779,7 +753,7 @@ function edPlay(){
   const ts=song.offset+eb*bs();
   if(song.buf){esrc=ctx.createBufferSource();esrc.buffer=song.buf;esrc.connect(outM);if(ts>=0)esrc.start(0,ts);else esrc.start(ctx.currentTime-ts)}
 }
-function edGeo(){const aw=Math.max(200,W-(E.hidden?0:E.offsetWidth));return{aw,x0:aw*.04,x1:aw*.96,J:H*.75,PPB:120}}
+function edGeo(){const aw=Math.max(200,W-(E.hidden||E.classList.contains('col')?0:E.offsetWidth));return{aw,x0:Math.max(aw*.04,34),x1:aw-Math.max(aw*.04,14),J:H*.75,PPB:120}}
 function edAt(px,py){
   const{x0,x1,J,PPB}=edGeo();
   const b=Math.round((eb+(J-py)/PPB)*sn)/sn;let x=clamp((px-x0)/(x1-x0),0,1);
@@ -819,7 +793,7 @@ function edCopy(cut){
 }
 function edPaste(){
   if(!edClip.length)return toast('コピーしたノーツがありません');
-  const g=edGeo(),at=emx>16&&emx<g.aw?edAt(emx,emy).b:Math.round(eb*sn)/sn,b0=Math.min(...edClip.map(n=>n.b));
+  const g=edGeo(),at=emx>28&&emx<g.aw?edAt(emx,emy).b:Math.round(eb*sn)/sn,b0=Math.min(...edClip.map(n=>n.b));
   const add=cl(edClip).map(n=>({...n,b:Math.max(0,at+n.b-b0)}));
   edSel.clear();for(const n of add){song.notes.push(n);edSel.add(n)}
   song.notes.sort((a,c)=>a.b-c.b);edSync();toast(add.length+'個を貼り付けました');
@@ -828,7 +802,7 @@ function edSelAll(){edSel.clear();song.notes.forEach(n=>edSel.add(n));edSync()}
 const ptPx=(n,q)=>{const{x0,x1,J,PPB}=edGeo();return[x0+(x1-x0)*q.x,J-(n.b+q.d-eb)*PPB]};
 function edPointer(e){
   ectrl=e.ctrlKey;
-  if(e.clientX<16){edScr=true;edScrTo(e.clientY);return}
+  if(e.clientX<28){edScr=true;edScrTo(e.clientY);return}
   if(edMode==='del'){edErase=true;edEraseAt(e.clientX,e.clientY);return}
   if(edMode==='sel'){
     const n=noteAt(e.clientX,e.clientY);
@@ -968,7 +942,7 @@ cv.addEventListener('pointermove',e=>{emx=e.clientX;emy=e.clientY;ectrl=e.ctrlKe
     else if(edPt&&a.b<=edDrag.b){edDrag.k='t';delete edDrag.p;edPt=null}}
   if(edPt){const{n,i}=edPt,p=n.p,a=edAt(e.clientX,e.clientY),lo=(i?p[i-1].d:0)+.01,hi=i<p.length-1?p[i+1].d-.01:1e9;p[i]={d:clamp(a.b-n.b,lo,hi),x:a.x}}});
 cv.addEventListener('contextmenu',e=>e.preventDefault());
-cv.addEventListener('dblclick',e=>{if(mode!=='edit'||e.clientX<16)return;const n=noteAt(e.clientX,e.clientY);if(n){song.notes.splice(song.notes.indexOf(n),1);edSel.delete(n);edSync()}});
+cv.addEventListener('dblclick',e=>{if(mode!=='edit'||e.clientX<28)return;const n=noteAt(e.clientX,e.clientY);if(n){song.notes.splice(song.notes.indexOf(n),1);edSel.delete(n);edSync()}});
 addEventListener('keydown',e=>{ectrl=e.ctrlKey});addEventListener('keyup',e=>{ectrl=e.ctrlKey});
 addEventListener('pointerup',e=>{if(mode==='edit')edUp();else release(e.pointerId)});
 addEventListener('pointercancel',e=>release(e.pointerId));
@@ -988,12 +962,17 @@ $('e_ar').oninput=e=>song.artist=e.target.value;
 $('e_bpm').onchange=e=>{const v=+e.target.value;if(v>0)song.bpm=v;else edSync()};
 $('e_off').onchange=e=>song.offset=+e.target.value||0;
 $('e_sn').onchange=e=>sn=+e.target.value;
-const setMode=m=>{edMode=m;edBox=null;E.querySelectorAll('#e_mode button').forEach(x=>x.classList.toggle('on',x.dataset.m===m));cv.style.cursor=m==='put'?'crosshair':m==='sel'?'default':'cell'};
-E.querySelectorAll('#e_mode button').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
-E.querySelectorAll('#e_kseg button').forEach(b=>b.onclick=()=>{ek=b.dataset.k;setMode('put');E.querySelectorAll('#e_kseg button').forEach(x=>x.classList.toggle('on',x===b))});
+const setMode=m=>{edMode=m;edBox=null;document.querySelectorAll('#ed [data-m]').forEach(x=>x.classList.toggle('on',x.dataset.m===m));cv.style.cursor=m==='put'?'crosshair':m==='sel'?'default':'cell'};
+document.querySelectorAll('#ed [data-m]').forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+document.querySelectorAll('#ed [data-k]').forEach(b=>b.onclick=()=>{ek=b.dataset.k;setMode('put');document.querySelectorAll('#ed [data-k]').forEach(x=>x.classList.toggle('on',x.dataset.k===ek))});
 E.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{E.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('on',x===b));E.querySelectorAll('[data-pane]').forEach(p=>p.classList.toggle('on',p.dataset.pane===b.dataset.tab))});
 $('e_cp').onclick=()=>edCopy();$('e_ct').onclick=()=>edCopy(true);$('e_ps').onclick=edPaste;$('e_dl').onclick=edDel;$('e_sa').onclick=edSelAll;
-$('e_hb').onclick=e=>{eht=!eht;e.target.textContent=eht?'R':'L'};
+$('e_hb').onclick=$('t_hb').onclick=()=>{eht=!eht;$('e_hb').textContent=$('t_hb').textContent=eht?'R':'L'};
+// パネルをしまう: しまっている間は下のツールバー(モード・ノーツ種類・手・0拍目・再生・保存)だけ表示
+let edColl=null;
+const edPanel=open=>{edColl=!open;E.classList.toggle('col',edColl)};
+$('e_col').onclick=()=>edPanel(false);$('t_op').onclick=()=>edPanel(true);
+$('t_z').onclick=()=>{edStop();eb=0};$('t_pl').onclick=()=>edPlay();$('t_sv').onclick=()=>edSave();
 // タイムライン全体の長さ(拍)。ノーツの最後+8拍、音源の長さの長い方。スクロールバーは左端(上=末尾、下=0拍)
 function edTotal(){
   const nb=song.notes.reduce((m,n)=>Math.max(m,n.b+(n.k==='l'?ltail(n).d:0)),0)+8;
@@ -1078,7 +1057,7 @@ function draw(){
   if(mode==='edit'){drawEdit();return requestAnimationFrame(draw)}
   let t=running?ctx.currentTime-t0:-LEAD;
   if(running){
-    if(song.loop&&t>LOOPT){t0+=LOOPT;t-=LOOPT;for(const n of notes){n.done=false;n.held=null;n.dev=0}}
+    if(song.loop&&t>LOOPT){t0+=LOOPT;t-=LOOPT;for(const n of notes){n.done=false;n.held=null;n.dev=0}if(Auto.run&&++Auto.loops>=3)finishAuto()}
     if(Opt.auto&&!song.check)autoPlay(t);
     for(const n of notes){
       if(n.done)continue;
@@ -1150,6 +1129,6 @@ function draw(){
   }
   requestAnimationFrame(draw);
 }
- if(PH)phoneClient(PH);else{mainMenu();draw()}
+ mainMenu();draw();
 </script>
 </body></html>
